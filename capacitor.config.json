@@ -1,0 +1,9 @@
+{
+  "appId": "com.balanceo.algebraico",
+  "appName": "Cuaderno de Balanceo",
+  "webDir": "www",
+  "backgroundColor": "#0c0505",
+  "android": {
+    "backgroundColor": "#0c0505"
+  }
+}
