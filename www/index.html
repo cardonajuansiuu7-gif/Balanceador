@@ -949,6 +949,13 @@ function run(mode){
     return id;
   }
 
+  // "epoch" global: el admin lo cambia desde el panel cuando restablece todo,
+  // así forzamos a que todos los dispositivos ya desbloqueados vuelvan a pedir contraseña.
+  async function getRemoteEpoch(){
+    const snap = await db.collection('meta').doc('access').get();
+    return snap.exists ? (snap.data().epoch || 0) : 0;
+  }
+
   function showApp(){
     document.getElementById('gate-overlay').style.display = 'none';
   }
@@ -989,6 +996,10 @@ function run(mode){
       });
 
       if(result.ok){
+        try{
+          const epoch = await getRemoteEpoch();
+          localStorage.setItem('dq_epoch', String(epoch));
+        }catch(e){ /* si falla la lectura del epoch, igual dejamos entrar */ }
         localStorage.setItem('dq_unlocked','true');
         showApp();
       } else if(result.reason === 'other-device'){
@@ -1003,8 +1014,23 @@ function run(mode){
     btn.disabled = false; btn.textContent = 'Ingresar';
   }
 
-  window.addEventListener('DOMContentLoaded', ()=>{
-    if(localStorage.getItem('dq_unlocked') === 'true') showApp();
+  window.addEventListener('DOMContentLoaded', async ()=>{
+    if(localStorage.getItem('dq_unlocked') === 'true'){
+      try{
+        const remoteEpoch = await getRemoteEpoch();
+        const localEpoch = Number(localStorage.getItem('dq_epoch') || '0');
+        if(remoteEpoch !== localEpoch){
+          // el admin restableció los accesos: hay que volver a pedir contraseña
+          localStorage.removeItem('dq_unlocked');
+          localStorage.removeItem('dq_epoch');
+        } else {
+          showApp();
+        }
+      }catch(err){
+        // sin conexión: no podemos confirmar contra el servidor, no bloqueamos al usuario
+        showApp();
+      }
+    }
     document.getElementById('gate-btn').addEventListener('click', tryUnlock);
     document.getElementById('gate-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
   });
