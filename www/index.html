@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuaderno de Balanceo · Método Algebraico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#0c0505;
+    --paper-2:#170808;
+    --ink:#f3e7e1;
+    --ink-soft:#c6a199;
+    --rule:#4a1f1c;
+    --patina:#ff5a3c;
+    --patina-dark:#e2402a;
+    --amber:#f2a93c;
+    --red-margin:#ff6b47;
+    --error:#ff6b52;
+    --card:#1a0a0a;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(226,64,42,.28), transparent 55%),
+      radial-gradient(circle at 85% 15%, rgba(255,90,60,.10), transparent 45%),
+      var(--paper);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;}
+  header{
+    padding:clamp(32px,8vw,56px) 0 28px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:32px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--patina-dark);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--patina-dark);display:inline-block;}
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,7vw,50px);
+    margin:0 0 12px;
+    letter-spacing:-.01em;
+    text-shadow:0 0 28px rgba(226,64,42,.35);
+  }
+  header p{
+    max-width:560px;
+    color:var(--ink-soft);
+    font-size:15px;
+    margin:0;
+  }
+  .lab-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:4px;
+    position:relative;
+    padding:24px 20px 24px 24px;
+    margin-bottom:28px;
+    box-shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  .lab-card::before{
+    content:"";
+    position:absolute;left:0;top:0;bottom:0;
+    width:3px;background:linear-gradient(180deg,var(--patina),var(--red-margin));
+  }
+  label.field-label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  #equation{
+    width:100%;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:17px;
+    padding:14px 16px;
+    border:1px solid var(--rule);
+    background:#100707;
+    border-radius:3px;
+    color:var(--ink);
+    outline:none;
+  }
+  #equation:focus{border-color:var(--patina);box-shadow:0 0 0 3px rgba(226,64,42,.18);}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+  .hint code{background:var(--paper-2);padding:1px 5px;border-radius:3px;font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+  .btn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:13px 18px;
+    border-radius:3px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+    flex:1 1 auto;
+    white-space:nowrap;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:linear-gradient(135deg,var(--patina-dark),var(--red-margin));color:#fff2ee;box-shadow:0 6px 20px rgba(226,64,42,.35);}
+  .btn-primary:hover{filter:brightness(1.1);}
+  .btn-secondary{background:transparent;color:var(--ink);border-color:var(--rule);}
+  .btn-secondary:hover{background:var(--paper-2);border-color:var(--patina-dark);}
+  #results{display:none;}
+  .status{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:3px;
+    margin-bottom:24px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    max-width:100%;
+  }
+  .status.ok{background:rgba(226,64,42,.15);color:#ff8a6e;border:1px solid rgba(226,64,42,.3);}
+  .status.warn{background:rgba(242,169,60,.12);color:var(--amber);border:1px solid rgba(242,169,60,.28);}
+  .status.err{background:rgba(255,107,82,.13);color:var(--error);border:1px solid rgba(255,107,82,.3);}
+  .section-title{
+    font-family:'Fraunces',serif;
+    font-size:clamp(18px,4vw,22px);
+    font-weight:600;
+    margin:32px 0 14px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .section-title .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--patina);
+    border:1px solid var(--patina-dark);
+    border-radius:50%;
+    width:22px;height:22px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .final-eq{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(15px,4.5vw,22px);
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--patina);
+    padding:18px 16px;
+    border-radius:3px;
+    letter-spacing:.01em;
+    overflow-x:auto;
+    box-shadow:0 8px 30px rgba(0,0,0,.4);
+  }
+  .final-eq .coef{color:var(--amber);font-weight:600;}
+  .step-block{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    overflow-x:auto;
+  }
+  .step-block h4{
+    margin:0 0 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .var-list{font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.9;}
+  .var-list span.tag{color:var(--patina);font-weight:600;}
+  .eq-line{font-family:'IBM Plex Mono',monospace;font-size:13.5px;padding:3px 0;white-space:nowrap;}
+  table{width:100%;border-collapse:collapse;margin-top:6px;min-width:420px;}
+  th,td{
+    text-align:left;
+    padding:9px 10px;
+    font-size:13.5px;
+    border-bottom:1px solid var(--rule);
+    font-family:'IBM Plex Mono',monospace;
+    white-space:nowrap;
+  }
+  th{font-family:'Inter',sans-serif;font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);}
+  tr:last-child td{border-bottom:none;}
+  td.total-row, tr.total-row td{font-weight:700;color:var(--patina);border-top:1px solid var(--rule);}
+  .compound-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:18px 16px;
+    margin-bottom:16px;
+    overflow-x:auto;
+  }
+  .compound-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:10px;flex-wrap:wrap;gap:8px;
+  }
+  .compound-head .formula{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;font-weight:600;
+  }
+  .compound-head .mm{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;color:var(--patina);font-weight:600;
+  }
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
+  .tile{
+    width:60px;height:70px;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    background:#100707;
+    display:flex;flex-direction:column;
+    justify-content:space-between;
+    padding:5px 6px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .tile .num{font-size:9px;color:var(--ink-soft);}
+  .tile .sym{font-size:19px;font-weight:600;color:var(--patina);line-height:1;}
+  .tile .mass{font-size:8.5px;color:var(--ink-soft);}
+  .summary-eq{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  footer{margin-top:60px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:18px;font-family:'IBM Plex Mono',monospace;}
+  @media (max-width:640px){
+    .wrap{padding:0 16px 60px;}
+    header{padding:24px 0 22px;margin-bottom:24px;}
+    .lab-card{padding:20px 16px;}
+    #equation{font-size:15px;padding:12px 14px;}
+    .btn-row{gap:8px;}
+    button{flex:1 1 calc(50% - 8px);font-size:13px;padding:12px 10px;}
+    .final-eq{padding:14px 12px;}
+    .compound-head{flex-direction:column;align-items:flex-start;gap:4px;}
+    .tile{width:52px;height:62px;}
+  }
+  @media (max-width:400px){
+    button{flex:1 1 100%;}
+  }
+</style>
+</head>
+<body>
+<div id="gate-overlay" style="position:fixed;inset:0;z-index:9999;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:360px;width:100%;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:28px 24px;text-align:center;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--patina-dark);margin-bottom:10px;">Acceso privado</div>
+    <div style="color:var(--ink);font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:18px;">Ingresa tu contraseña</div>
+    <input id="gate-input" type="password" placeholder="Contraseña" style="width:100%;padding:12px 14px;border-radius:4px;border:1px solid var(--rule);background:#100707;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:15px;outline:none;box-sizing:border-box;">
+    <div id="gate-error" style="display:none;color:var(--error);font-size:12.5px;margin-top:10px;font-family:'IBM Plex Mono',monospace;"></div>
+    <button id="gate-btn" style="margin-top:16px;width:100%;padding:12px;border:none;border-radius:4px;background:linear-gradient(135deg,var(--patina-dark),var(--red-margin));color:#fff2ee;font-weight:600;font-size:14px;cursor:pointer;">Ingresar</button>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Cuaderno de laboratorio · Método algebraico</div>
+    <h1>Balanceador &amp; Calculadora de Pesos Atómicos</h1>
+    <p>Escribe una ecuación química. El sistema arma variables por compuesto, plantea una ecuación por cada elemento, resuelve el sistema lineal y muestra el peso molecular de cada sustancia paso a paso.</p>
+  </header>
+
+  <div class="lab-card">
+    <label class="field-label" for="equation">Ecuación química</label>
+    <input id="equation" type="text" value="" placeholder="ej. Fe + O2 -> Fe2O3" autocomplete="off" spellcheck="false">
+    <div class="hint">Para una <b>ecuación</b> usa <code>-&gt;</code> o <code>=</code> como flecha y <code>+</code> entre compuestos, ej. <code>KMnO4 + HCl -> KCl + MnCl2 + H2O + Cl2</code>. Para un <b>elemento o compuesto suelto</b> escríbelo directo, ej. <code>Fe2(SO4)3</code> o <code>Na</code> (también puedes separar varios con <code>+</code>).</div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="run('calc')">🔎 Calcular peso atómico</button>
+      <button class="btn-secondary" onclick="run('balance')">⚖ Solo balancear</button>
+      <button class="btn-primary" onclick="run('balance_calc')">⚖ Balancear y calcular</button>
+      <button class="btn-secondary" onclick="run('equality')">⟺ Calcular igualdad de peso atómico</button>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+  <footer>Pesos atómicos redondeados a la unidad (decimal &gt;5 sube, ≤5 se recorta). Uso educativo.</footer>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   TABLA DE PESOS ATÓMICOS
+--------------------------------------------------------------- */
+const PT = {
+ H:{n:1,m:1},He:{n:2,m:4},Li:{n:3,m:7},Be:{n:4,m:9},B:{n:5,m:11},
+ C:{n:6,m:12},N:{n:7,m:14},O:{n:8,m:16},F:{n:9,m:19},Ne:{n:10,m:20},
+ Na:{n:11,m:23},Mg:{n:12,m:24},Al:{n:13,m:27},Si:{n:14,m:28},P:{n:15,m:31},
+ S:{n:16,m:32},Cl:{n:17,m:35},Ar:{n:18,m:40},K:{n:19,m:39},Ca:{n:20,m:40},
+ Sc:{n:21,m:45},Ti:{n:22,m:48},V:{n:23,m:51},Cr:{n:24,m:52},Mn:{n:25,m:55},
+ Fe:{n:26,m:56},Co:{n:27,m:59},Ni:{n:28,m:59},Cu:{n:29,m:63},Zn:{n:30,m:65},
+ Ga:{n:31,m:70},Ge:{n:32,m:73},As:{n:33,m:75},Se:{n:34,m:79},Br:{n:35,m:80},
+ Kr:{n:36,m:84},Rb:{n:37,m:85},Sr:{n:38,m:88},Y:{n:39,m:89},Zr:{n:40,m:91},
+ Nb:{n:41,m:93},Mo:{n:42,m:96},Tc:{n:43,m:98},Ru:{n:44,m:101},Rh:{n:45,m:103},
+ Pd:{n:46,m:106},Ag:{n:47,m:108},Cd:{n:48,m:112},In:{n:49,m:115},Sn:{n:50,m:119},
+ Sb:{n:51,m:122},Te:{n:52,m:128},I:{n:53,m:127},Xe:{n:54,m:131},Cs:{n:55,m:133},
+ Ba:{n:56,m:137},La:{n:57,m:139},Ce:{n:58,m:140},Pr:{n:59,m:141},Nd:{n:60,m:144},
+ Pm:{n:61,m:145},Sm:{n:62,m:150},Eu:{n:63,m:152},Gd:{n:64,m:157},Tb:{n:65,m:159},
+ Dy:{n:66,m:162},Ho:{n:67,m:165},Er:{n:68,m:167},Tm:{n:69,m:169},Yb:{n:70,m:173},
+ Lu:{n:71,m:175},Hf:{n:72,m:178},Ta:{n:73,m:181},W:{n:74,m:184},Re:{n:75,m:186},
+ Os:{n:76,m:190},Ir:{n:77,m:192},Pt:{n:78,m:195},Au:{n:79,m:197},Hg:{n:80,m:201},
+ Tl:{n:81,m:204},Pb:{n:82,m:207},Bi:{n:83,m:209},Po:{n:84,m:209},At:{n:85,m:210},
+ Rn:{n:86,m:222},Fr:{n:87,m:223},Ra:{n:88,m:226},Ac:{n:89,m:227},Th:{n:90,m:232},
+ Pa:{n:91,m:231},U:{n:92,m:238},Np:{n:93,m:237},Pu:{n:94,m:244},Am:{n:95,m:243},
+ Cm:{n:96,m:247},Bk:{n:97,m:247},Cf:{n:98,m:251},Es:{n:99,m:252},Fm:{n:100,m:257},
+ Md:{n:101,m:258},No:{n:102,m:259},Lr:{n:103,m:266},Rf:{n:104,m:267},Db:{n:105,m:268},
+ Sg:{n:106,m:269},Bh:{n:107,m:270},Hs:{n:108,m:269},Mt:{n:109,m:278},Ds:{n:110,m:281},
+ Rg:{n:111,m:282},Cn:{n:112,m:285},Nh:{n:113,m:286},Fl:{n:114,m:289},Mc:{n:115,m:290},
+ Lv:{n:116,m:293},Ts:{n:117,m:294},Og:{n:118,m:294}
+};
+
+/* ---------------------------------------------------------------
+   FRACCIONES (para el método algebraico exacto)
+--------------------------------------------------------------- */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;}
+class Frac{
+  constructor(n,d=1){
+    if(d<0){n=-n;d=-d;}
+    const g=gcd(n,d)||1;
+    this.n = g? n/g : n;
+    this.d = g? d/g : d;
+  }
+  add(o){return new Frac(this.n*o.d+o.n*this.d, this.d*o.d);}
+  sub(o){return new Frac(this.n*o.d-o.n*this.d, this.d*o.d);}
+  mul(o){return new Frac(this.n*o.n, this.d*o.d);}
+  div(o){return new Frac(this.n*o.d, this.d*o.n);}
+  isZero(){return this.n===0;}
+  neg(){return new Frac(-this.n,this.d);}
+  toString(){return this.d===1?`${this.n}`:`${this.n}/${this.d}`;}
+}
+
+/* ---------------------------------------------------------------
+   PARSER DE FÓRMULAS QUÍMICAS
+--------------------------------------------------------------- */
+function parseFormula(formula){
+  let i=0;
+  function parseNumber(def){
+    const m=/^[0-9]+/.exec(formula.slice(i));
+    if(!m) return def;
+    i+=m[0].length;
+    return parseInt(m[0],10);
+  }
+  function parseGroup(){
+    let counts={};
+    while(i<formula.length && formula[i]!==')'){
+      if(formula[i]==='('){
+        i++;
+        const inner=parseGroup();
+        if(formula[i]!==')') throw new Error('Paréntesis sin cerrar en "'+formula+'"');
+        i++;
+        const mult=parseNumber(1);
+        for(const el in inner) counts[el]=(counts[el]||0)+inner[el]*mult;
+      } else if(/[A-Z]/.test(formula[i])){
+        const m=/^[A-Z][a-z]?/.exec(formula.slice(i));
+        const sym=m[0];
+        if(!PT[sym]) throw new Error('Elemento desconocido: "'+sym+'"');
+        i+=sym.length;
+        const n=parseNumber(1);
+        counts[sym]=(counts[sym]||0)+n;
+      } else {
+        throw new Error('Carácter inesperado "'+formula[i]+'" en "'+formula+'"');
+      }
+    }
+    return counts;
+  }
+  const result=parseGroup();
+  if(i!==formula.length) throw new Error('Fórmula inválida: "'+formula+'"');
+  if(Object.keys(result).length===0) throw new Error('Fórmula vacía');
+  return result;
+}
+
+function splitCoefficient(token){
+  const m=/^([0-9]+)(.*)$/.exec(token);
+  if(m) return {coef:parseInt(m[1],10), formula:m[2]};
+  return {coef:1, formula:token};
+}
+
+function molarMass(counts){
+  let total=0;
+  for(const el in counts) total += counts[el]*PT[el].m;
+  return total;
+}
+
+function formatFormulaHTML(counts){
+  return Object.entries(counts).map(([el,n])=> el + (n>1?`<sub>${n}</sub>`:'')).join('');
+}
+
+/* ---------------------------------------------------------------
+   PARSER DE ECUACIÓN
+--------------------------------------------------------------- */
+function parseEquation(text){
+  const arrow = text.includes('->') ? '->' : (text.includes('→') ? '→' : '=');
+  if(!text.includes(arrow)) throw new Error('No se encontró una flecha (usa "->" o "=") en la ecuación.');
+  const [leftStr,rightStr] = text.split(arrow);
+  if(!leftStr || !rightStr) throw new Error('La ecuación necesita reactivos y productos a ambos lados.');
+  const parseSide = s => s.split('+').map(t=>t.trim()).filter(Boolean).map(tok=>{
+    const {coef,formula} = splitCoefficient(tok.replace(/\s+/g,''));
+    return {raw:tok, coef, formula, counts:parseFormula(formula)};
+  });
+  const reactants = parseSide(leftStr);
+  const products = parseSide(rightStr);
+  if(reactants.length===0 || products.length===0) throw new Error('La ecuación necesita al menos un reactivo y un producto.');
+  return {reactants, products};
+}
+
+/* ---------------------------------------------------------------
+   BALANCEO ALGEBRAICO
+--------------------------------------------------------------- */
+function letterFor(i){
+  return i<26 ? String.fromCharCode(97+i) : 'v'+(i+1);
+}
+
+function balanceEquation(reactants, products){
+  const compounds = [...reactants.map(c=>({...c,side:1})), ...products.map(c=>({...c,side:-1}))];
+  const elements = [...new Set(compounds.flatMap(c=>Object.keys(c.counts)))];
+
+  const matrixOrig = elements.map(el =>
+    compounds.map(c => new Frac((c.counts[el]||0) * c.side))
+  );
+  const rows = matrixOrig.length, cols = compounds.length;
+
+  const freq = new Array(cols).fill(0);
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(!matrixOrig[r][c].isZero()) freq[c]++;
+  let refCol = 0;
+  for(let c=1;c<cols;c++) if(freq[c]>freq[refCol]) refCol = c;
+
+  const order = [];
+  for(let c=0;c<cols;c++) if(c!==refCol) order.push(c);
+  order.push(refCol);
+
+  const M = matrixOrig.map(row => order.map(idx => row[idx]));
+
+  let pivotColsPerm = [];
+  let lead = 0;
+  for(let r=0; r<rows && lead<cols; r++){
+    let i=r;
+    while(i<rows && M[i][lead].isZero()){ i++; }
+    if(i===rows){ lead++; r--; continue; }
+    [M[i],M[r]] = [M[r],M[i]];
+    const lv = M[r][lead];
+    M[r] = M[r].map(x=>x.div(lv));
+    for(let j=0;j<rows;j++){
+      if(j!==r && !M[j][lead].isZero()){
+        const f = M[j][lead];
+        M[j] = M[j].map((x,k)=> x.sub(f.mul(M[r][k])));
+      }
+    }
+    pivotColsPerm.push(lead);
+    lead++;
+  }
+
+  const pivotCols = pivotColsPerm.map(pc=>order[pc]);
+  const freeColsPerm = [];
+  for(let c=0;c<cols;c++) if(!pivotColsPerm.includes(c)) freeColsPerm.push(c);
+  const freeCols = freeColsPerm.map(fc=>order[fc]);
+  if(freeCols.length===0) throw new Error('El sistema no tiene grados de libertad: revisa que la ecuación esté bien planteada.');
+
+  const invOrder = new Array(cols);
+  order.forEach((origIdx, permIdx)=> invOrder[origIdx]=permIdx);
+  const Mo = M.map(row => compounds.map((_,origIdx)=> row[invOrder[origIdx]]));
+
+  const x = new Array(cols).fill(null);
+  const chosenFree = freeCols.includes(refCol) ? refCol : freeCols[0];
+  freeCols.forEach(fc=> x[fc] = (fc===chosenFree) ? new Frac(1,1) : new Frac(0,1));
+  pivotCols.forEach((pc,rowIdx)=>{
+    let sum = new Frac(0,1);
+    freeCols.forEach(fc=>{ sum = sum.add(Mo[rowIdx][fc].mul(x[fc])); });
+    x[pc] = sum.neg();
+  });
+
+  let lcm = 1;
+  x.forEach(f=>{ lcm = (lcm*f.d)/gcd(lcm,f.d); });
+  let ints = x.map(f=> Math.round(f.n * (lcm/f.d)) );
+
+  let g = ints.reduce((a,b)=>gcd(a,b), ints[0]);
+  ints = ints.map(v=>v/g);
+
+  if(ints.some(v=>v===0) || (ints.some(v=>v<0) && ints.some(v=>v>0))){
+    throw new Error('No fue posible encontrar coeficientes enteros positivos consistentes. Revisa la ecuación.');
+  }
+  ints = ints.map(Math.abs);
+
+  return {compounds, elements, matrix:matrixOrig, M:Mo, pivotCols, freeCols, x, coeffs:ints, refCol:chosenFree};
+}
+
+
+/* ---------------------------------------------------------------
+   RENDER
+--------------------------------------------------------------- */
+function el(tag, cls, html){
+  const e=document.createElement(ta
